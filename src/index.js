@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-const mongoUrl = 'mongodb+srv://AshutoshGupta:ashutosh54264850@cluster0.ukus0.mongodb.net/group68Database'
+const mongoUrl = ''
 
 mongoose.connect( mongoUrl, {
     useNewUrlParser: true
