@@ -1,0 +1,26 @@
+{
+  "name": "shop_now",
+  "version": "1.0.0",
+  "description": "A shopping platform to provide support to the vendors to sell thier products.",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ashutosh5426/shop_now.git"
+  },
+  "author": "Ashutosh Gupta",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ashutosh5426/shop_now/issues"
+  },
+  "homepage": "https://github.com/Ashutosh5426/shop_now#readme",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "mongodb": "^5.1.0",
+    "mongoose": "^7.0.0",
+    "nodemon": "^2.0.20"
+  }
+}
