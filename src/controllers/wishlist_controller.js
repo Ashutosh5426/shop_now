@@ -1,8 +1,28 @@
- // GET /wishlist: Get all wishlist items
+const { db } = require('../database/database_operations');
+
+let sql = `CREATE TABLE IF NOT EXISTS Wishlist (
+    id INT PRIMARY KEY,
+    product_id INT NOT NULL,
+    creation_date DATE NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES product(id)
+  );`  
+
+  db.run(sql);
+
+
+   // GET /wishlist: Get all wishlist items
 const getAllWishlistItems = async (req, res) => {
     try {
-      const wishlistItems = await Wishlist.find();
-      res.status(200).json(wishlistItems);
+        sql = 'SELECT * FROM wishlist';
+        values = [];
+        db.all(sql, [], (err, rows) => {
+            if(err) return console.error(err.message);
+            rows.forEach(row => {
+                console.log(row);
+            })
+            return res.send(rows);
+        });
+        
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
@@ -11,27 +31,30 @@ const getAllWishlistItems = async (req, res) => {
   // GET /wishlist/:id: Get a specific wishlist item by ID
   const getWishlistItemById = async (req, res) => {
     try {
-      const wishlistItem = await Wishlist.findById(req.params.id);
-      if (!wishlistItem) {
-        res.status(404).json({ message: "Wishlist item not found" });
-        return;
-      }
-      res.status(200).json(wishlistItem);
+        const values = [req.params.id];
+        sql = 'SELECT * FROM wishlist WHERE id = ?';
+        db.all(sql, values, (err, rows) => {
+            if (err) return console.error(err.message);
+            rows.forEach(row => {
+                console.log(row);
+            })
+            return res.send(rows);
+        });
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
   };
   
   // POST /wishlist: Add a new item to the wishlist
-  const addWishlistItem = async (req, res) => {
-    const wishlistItem = new Wishlist({
-      product: req.body.product,
-      creation_date: new Date(),
-    });
-  
+  const createWishlistItem = async (req, res) => {
+    let values = [req.body.id, req.body.ProductID, req.body.creationDate];
     try {
-      const newWishlistItem = await wishlistItem.save();
-      res.status(201).json(newWishlistItem);
+        sql = `INSERT INTO Wishlist (id, product_id, creation_date)
+        VALUES (?, ?, ?);`;
+        db.run(sql, values, (err) => {
+            if (err) return console.error(err.message);
+            return res.status(201).send('Stored Successfully');
+        })
     } catch (err) {
       res.status(400).json({ message: err.message });
     }
@@ -40,15 +63,15 @@ const getAllWishlistItems = async (req, res) => {
   // DELETE /wishlist/:id: Delete a wishlist item by ID
   const deleteWishlistItemById = async (req, res) => {
     try {
-      const deletedWishlistItem = await Wishlist.findByIdAndRemove(req.params.id);
-      if (!deletedWishlistItem) {
-        res.status(404).json({ message: "Wishlist item not found" });
-        return;
-      }
-      res.status(200).json({ message: "Wishlist item deleted" });
+        const id = req.params.id;
+                    sql = 'DELETE FROM wishlist WHERE id = ?';
+                    db.run(sql, [id], (err) => {
+                        if (err) return console.error(err.message);
+                        return res.send('wishlist item deleted')
+                    })
     } catch (err) {
       res.status(500).json({ message: err.message });
     }
   };
 
-  module.exports = {getAllWishlistItems, getWishlistItemById, addWishlistItem, deleteWishlistItemById};
+  module.exports = {getAllWishlistItems, getWishlistItemById, createWishlistItem, deleteWishlistItemById};

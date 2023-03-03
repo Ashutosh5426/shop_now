@@ -1,88 +1,122 @@
-// Import the Product model from the database schema
-const Product = require('../models/product_model');
+const { db } = require('../database/database_operations');
 
-// GET /products: Get all products
-const getAllProducts = async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-}
+let sql = `CREATE TABLE IF NOT EXISTS product (
+    ProductID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT NOT NULL,
+    Price REAL NOT NULL,
+    VendorID INTEGER NOT NULL,
+    CategoryID INTEGER NOT NULL,
+    CreationDate TEXT NOT NULL,
+    UpdationDate TEXT NOT NULL,
+    Variations TEXT,
+    Attributes TEXT,
+    FOREIGN KEY (VendorID) REFERENCES vendor(VendorID),
+    FOREIGN KEY (CategoryID) REFERENCES product_category(CategoryID)
+);
+`
 
-// GET /products/:id: Get a specific product by ID
-const getProduct = async (req, res) => {
-  const id = req.params.id;
-  try {
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-}
+db.run(sql);
+
 
 // POST /products: Add a new product
-const addProduct = async (req, res) => {
-  const product = new Product({
-    name: req.body.name,
-    price: req.body.price,
-    vendor: req.body.vendor,
-    category: req.body.category,
-    variations: req.body.variations,
-    attributes: req.body.attributes
-  });
-  try {
-    const newProduct = await product.save();
-    res.status(201).json(newProduct);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-}
+const createProduct = async (req, res) => {
+    let data = req.body;
+    const { Name, Price, VendorID, CategoryID, CreationDate, UpdationDate, Variations, Attributes } = req.body;
+    try {
+
+        sql = 'INSERT INTO product (Name, Price, VendorID, CategoryID, CreationDate, UpdationDate, Variations, Attributes) VALUES(?, ?, ?, ?, ?, ?, ?, ?)';
+        values = [Name, Price, VendorID, CategoryID, CreationDate, UpdationDate, Variations, Attributes];
+        db.run(sql, values, (err) => {
+            if (err) return console.error(err.message);
+            return res.status(201).send('Stored Successfully');
+        })
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+
+// GET /products: Get all products
+const getProducts = async (req, res) => {
+    try {
+        sql = 'SELECT * FROM product';
+        values = [];
+        db.all(sql, [], (err, rows) => {
+            if (err) return console.error(err.message);
+            rows.forEach(row => {
+                console.log(row);
+            })
+            return res.send(rows);
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// GET /products/:id: Get a specific product by ID
+const getProductById = async (req, res) => {
+    try {
+        const values = [req.params.id];
+        sql = 'SELECT * FROM product WHERE ProductID = ?';
+        db.all(sql, values, (err, rows) => {
+            if (err) return console.error(err.message);
+            rows.forEach(row => {
+                console.log(row);
+            })
+            return res.send(rows);
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 
 // PUT /products/:id: Update a product by ID
 const updateProduct = async (req, res) => {
-  const id = req.params.id;
-  try {
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+    try {console.log('update product called')
+        const id = req.params.id;
+        let data = req.body;
+        data = Object.values(data);
+        if (data) {
+            data.push(id);
+            sql = `UPDATE product
+            SET Name = ?,
+                Price = ?,
+                VendorID = ?,
+                CategoryID = ?,
+                CreationDate = ?,
+                UpdationDate = ?,
+                Variations = ?,
+                Attributes = ?
+            WHERE ProductID = ?;
+            ;`
+            db.run(sql, data, (err) => {
+                if (err) return console.error(err.message);
+                res.send('Data updated successfully')
+            })
+        } else {
+            res.status(404).json({ message: 'Product not found' });
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
-    product.name = req.body.name || product.name;
-    product.price = req.body.price || product.price;
-    product.vendor = req.body.vendor || product.vendor;
-    product.category = req.body.category || product.category;
-    product.variations = req.body.variations || product.variations;
-    product.attributes = req.body.attributes || product.attributes;
-    const updatedProduct = await product.save();
-    res.json(updatedProduct);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-}
+};
 
-// DELETE /products/:id: Delete a product by ID
+// DELETE /products/:id: Delete a products by ID
 const deleteProduct = async (req, res) => {
-  const id = req.params.id;
-  try {
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found' });
+    try {
+        const id = req.params.id;
+console.log('deleteProeuc called')
+            sql = 'DELETE FROM product WHERE ProductID = ?';
+            db.run(sql, [id], (err) => {
+                if (err) return console.error(err.message);
+                return res.send('product deleted')
+            })
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
-    await product.remove();
-    res.json({ message: 'Product deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-}
+};
 
-module.exports = {
-  getAllProducts,
-  getProduct,
-  addProduct,
-  updateProduct,
-  deleteProduct
-}
+
+module.exports = { createProduct, getProducts, getProductById, updateProduct, deleteProduct };

@@ -1,88 +1,123 @@
+const sqlite = require('sqlite3').verbose();
+const { db } = require('../database/database_operations');
+
+let sql = `CREATE TABLE IF NOT EXISTS vendor (
+    VendorID INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name TEXT NOT NULL,
+    Phone TEXT,
+    Address TEXT,
+    City TEXT,
+    State TEXT,
+    Zip TEXT,
+    Country TEXT,
+    Type TEXT NOT NULL,
+    CategoryID INTEGER,
+    GSTNumber TEXT,
+    FOREIGN KEY (CategoryID) REFERENCES product_category(CategoryID)
+);`
+
+db.run(sql);
+
+// POST /vendors: Add a new vendor
+const createVendor = async (req, res) => {
+    // let data = req.body;
+    const { Name, Phone, Address, City, State, Zip, Country, Type, CategoryId, GSTNumber } = req.body;
+
+    try {
+        sql = 'INSERT INTO vendor(Name, Phone, Address, City, State, Zip, Country, Type, CategoryID, GSTNumber) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        values = [Name, Phone, Address, City, State, Zip, Country, Type, CategoryId, GSTNumber];
+        db.run(sql, values, (err) => {
+            if (err) return console.error(err.message);
+            return res.send('Stored Successfully');
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+
 // GET /vendors: Get all vendors
 const getVendors = async (req, res) => {
     try {
-      const vendors = await Vendor.find({});
-      res.json(vendors);
+        sql = 'SELECT * FROM vendor';
+        values = [];
+        db.all(sql, [], (err, rows) => {
+            if (err) return console.error(err.message);
+            rows.forEach(row => {
+                console.log(row);
+            })
+            return res.send(rows);
+        });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
-  };
-  
-  // GET /vendors/:id: Get a specific vendor by ID
-  const getVendor = async (req, res) => {
-    try {
-      const vendor = await Vendor.findById(req.params.id);
-      res.json(vendor);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
-  
-  // POST /vendors: Add a new vendor
-  const addVendor = async (req, res) => {
-    const vendor = new Vendor({
-      name: req.body.name,
-      phone: req.body.phone,
-      address: req.body.address,
-      city: req.body.city,
-      state: req.body.state,
-      zip: req.body.zip,
-      country: req.body.country,
-      type: req.body.type,
-      category: req.body.category,
-      gstNumber: req.body.gstNumber,
-    });
-  
-    try {
-      const newVendor = await vendor.save();
-      res.status(201).json(newVendor);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  };
-  
-  // PUT /vendors/:id: Update a vendor by ID
-  const updateVendor = async (req, res) => {
-    try {
-      const vendor = await Vendor.findById(req.params.id);
-  
-      if (vendor) {
-        vendor.name = req.body.name || vendor.name;
-        vendor.phone = req.body.phone || vendor.phone;
-        vendor.address = req.body.address || vendor.address;
-        vendor.city = req.body.city || vendor.city;
-        vendor.state = req.body.state || vendor.state;
-        vendor.zip = req.body.zip || vendor.zip;
-        vendor.country = req.body.country || vendor.country;
-        vendor.type = req.body.type || vendor.type;
-        vendor.category = req.body.category || vendor.category;
-        vendor.gstNumber = req.body.gstNumber || vendor.gstNumber;
-  
-        const updatedVendor = await vendor.save();
-        res.json(updatedVendor);
-      } else {
-        res.status(404).json({ message: 'Vendor not found' });
-      }
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  };
-  
-  // DELETE /vendors/:id: Delete a vendor by ID
-  const deleteVendor = async (req, res) => {
-    try {
-      const vendor = await Vendor.findById(req.params.id);
-  
-      if (vendor) {
-        await vendor.remove();
-        res.json({ message: 'Vendor deleted' });
-      } else {
-        res.status(404).json({ message: 'Vendor not found' });
-      }
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
-  };
+};
 
-  
-  module.exports = {getVendors, getVendor, addVendor, updateVendor, deleteVendor};
+// GET /vendors/:id: Get a specific vendor by ID
+const getVendorById = async (req, res) => {
+    try {
+        const values = [req.params.id];
+        sql = 'SELECT * FROM vendor WHERE VendorID = ?';
+        db.all(sql, values, (err, rows) => {
+            if (err) return console.error(err.message);
+            rows.forEach(row => {
+                console.log(row);
+            })
+            return res.send(rows);
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+
+// PUT /vendors/:id: Update a vendor by ID
+const updateVendor = async (req, res) => {
+    try {
+        const id = req.params.id;
+        let data = req.body;
+        data = Object.values(data);
+        if (data) {
+            data.push(id);
+            sql = `UPDATE vendor
+            SET Name = ?,
+                Phone = ?,
+                Address = ?,
+                City = ?,
+                State = ?,
+                Zip = ?,
+                Country = ?,
+                Type = ?,
+                CategoryID = ?,
+                GSTNumber = ?
+            WHERE VendorID = ?;`
+            db.run(sql, data, (err) => {
+                if (err) return console.error(err.message);
+                res.send('Data updated successfully')
+            })
+        } else {
+            res.status(404).json({ message: 'Vendor not found' });
+        }
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+// DELETE /vendors/:id: Delete a vendor by ID
+const deleteVendor = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+            sql = 'DELETE FROM vendor WHERE VendorID = ?';
+            db.run(sql, [id], (err) => {
+                if (err) return console.error(err.message);
+                return res.send('Vendor deleted')
+            })
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+module.exports = { createVendor, getVendors, getVendorById, updateVendor, deleteVendor };

@@ -17,10 +17,10 @@
   },
   "homepage": "https://github.com/Ashutosh5426/shop_now#readme",
   "dependencies": {
-    "body-parser": "^1.20.2",
     "express": "^4.18.2",
     "mongodb": "^5.1.0",
     "mongoose": "^7.0.0",
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "sqlite3": "^5.1.4"
   }
 }
