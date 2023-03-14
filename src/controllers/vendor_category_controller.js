@@ -1,4 +1,3 @@
-const sqlite = require("sqlite3").verbose();
 const { db } = require("../database/database_operations");
 
 let sql = `CREATE TABLE IF NOT EXISTS vendor_category (

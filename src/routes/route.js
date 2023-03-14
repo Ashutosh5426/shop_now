@@ -1,6 +1,4 @@
 const express = require("express");
-const router = express.Router();
-
 const product = require('../controllers/product_controller');
 const productCategory = require('../controllers/product_category_controller');
 const vendorCategory = require('../controllers/vendor_category_controller');
@@ -8,6 +6,8 @@ const vendor = require('../controllers/vendor_controller');
 const cart = require('../controllers/cart_controller');
 const wishlist = require('../controllers/wishlist_controller');
 
+
+const router = express.Router();
 
 // <------------------------------------------------------------------------->
 // Product Endpoints:
@@ -107,5 +107,6 @@ router.all("/*", async function (req, res) {
     res.status(404).send({ status: false, msg: "Page Not Found!" });
 });
 
+// <------------------------------------------------------------------------->
 // Exporting endpoint routes
 module.exports = router;

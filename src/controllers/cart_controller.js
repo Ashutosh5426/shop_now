@@ -1,69 +1,9 @@
-const sqlite = require("sqlite3").verbose();
 const { db } = require("../database/database_operations");
+const {getDataById, compareCartValues} = require('../resources/functions');
+const {queries} = require('../resources/queries');
 
-let sql = `CREATE TABLE IF NOT EXISTS cart (
-    CartID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Quantity INTEGER NOT NULL,
-    Variation TEXT,
-    Discount REAL,
-    GrandTotal REAL NOT NULL,
-    SubTotal REAL NOT NULL,
-    TaxTotal REAL NOT NULL,
-    CreationDate TEXT NOT NULL,
-    CartType TEXT NOT NULL,
-    FOREIGN KEY (ProductID) REFERENCES product(ProductID)
-);`;
-
-db.run(sql);
-
-
-const getDataById = async (id) => {
-  let result = await new Promise((resolve, reject) => {
-    sql = "SELECT * FROM cart WHERE CartID = ?";
-    db.all(sql, [id], (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rows);
-      }
-    });
-  });
-  return result;
-};
-
-function compareValues(updationData, previousData) {
-  previousData = previousData[0];
-
-  if (updationData.Quantity == undefined)
-    updationData.Quantity = previousData.Quantity;
-  if (updationData.Variation == undefined)
-    updationData.Variation = previousData.Variation;
-  if (updationData.Discount == undefined)
-    updationData.Discount = previousData.Discount;
-  if (updationData.GrandTotal == undefined)
-    updationData.GrandTotal = previousData.GrandTotal;
-  if (updationData.SubTotal == undefined)
-    updationData.SubTotal = previousData.SubTotal;
-  if (updationData.TaxTotal == undefined)
-    updationData.TaxTotal = previousData.TaxTotal;
-  if (updationData.CreationDate == undefined)
-    updationData.CreationDate = previousData.CreationDate;
-  if (updationData.CartType == undefined)
-    updationData.CartType = previousData.CartType;
-
-  updationData = [
-    updationData.Quantity,
-    updationData.Variation,
-    updationData.Discount,
-    updationData.GrandTotal,
-    updationData.SubTotal,
-    updationData.TaxTotal,
-    updationData.CreationDate,
-    updationData.CartType,
-  ];
-  // console.log(updationData)
-  return updationData;
-}
+db.run(queries.createCartTable);
+let sql;
 
 // GET /cart: Get all cart items
 const getCarts = async (req, res) => {
@@ -126,7 +66,6 @@ const createCart = async (req, res) => {
       if (err) return console.error(err.message);
       return res.status(201).send("Stored Successfully");
     });
-    //   res.status(201).json(newCart);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -137,10 +76,9 @@ const updateCart = async (req, res) => {
   try {
     const id = req.params.id;
     let updationData = req.body;
-    // data = Object.values(data);
     if (updationData) {
-      let previousData = await getDataById(id);
-      updationData = compareValues(updationData, previousData);
+      let previousData = await getDataById(id, 'cart', 'CartID');
+      updationData = compareCartValues(updationData, previousData);
       updationData.push(id);
 
       sql = `UPDATE cart

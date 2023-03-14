@@ -1,74 +1,12 @@
-const sqlite = require("sqlite3").verbose();
 const { db } = require("../database/database_operations");
+const {getDataById, compareVendorValues} = require('../resources/functions');
+const {queries} = require('../resources/queries');
 
-let sql = `CREATE TABLE IF NOT EXISTS vendor (
-    VendorID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name TEXT NOT NULL,
-    Phone TEXT,
-    Address TEXT,
-    City TEXT,
-    State TEXT,
-    Zip TEXT,
-    Country TEXT,
-    Type TEXT NOT NULL,
-    CategoryID INTEGER,
-    GSTNumber TEXT,
-    FOREIGN KEY (CategoryID) REFERENCES product_category(CategoryID)
-);`;
-
-db.run(sql);
-
-const getDataById = async (id) => {
-  let result = await new Promise((resolve, reject) => {
-    sql = "SELECT * FROM vendor WHERE VendorID = ?";
-    db.all(sql, [id], (err, rows) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rows);
-      }
-    });
-  });
-  return result;
-};
-
-function compareValues(updationData, previousData) {
-  previousData = previousData[0];
-
-  if (updationData.Name == undefined) updationData.Name = previousData.Name;
-  if (updationData.Phone == undefined) updationData.Phone = previousData.Phone;
-  if (updationData.Address == undefined)
-    updationData.Address = previousData.Address;
-  if (updationData.City == undefined) updationData.City = previousData.City;
-  if (updationData.State == undefined) updationData.State = previousData.State;
-  if (updationData.Zip == undefined) updationData.Zip = previousData.Zip;
-  if (updationData.Country == undefined)
-    updationData.Country = previousData.Country;
-  if (updationData.Type == undefined) updationData.Type = previousData.Type;
-  if (updationData.CategoryID == undefined)
-    updationData.CategoryID = previousData.CategoryID;
-  if (updationData.GSTNumber == undefined)
-    updationData.GSTNumber = previousData.GSTNumber;
-
-  updationData = [
-    updationData.Name,
-    updationData.Phone,
-    updationData.Address,
-    updationData.City,
-    updationData.State,
-    updationData.Zip,
-    updationData.Country,
-    updationData.Type,
-    updationData.CategoryID,
-    updationData.GSTNumber
-  ];
-
-  return updationData;
-}
+db.run(queries.createVendorTable);
+let sql;
 
 // POST /vendors: Add a new vendor
 const createVendor = async (req, res) => {
-  // let data = req.body;
   const {
     Name,
     Phone,
@@ -116,7 +54,6 @@ const getVendors = async (req, res) => {
       rows.forEach((row) => {
         console.log(row);
       });
-      // return res.send(rows);
       if (rows.length > 0) return res.send(rows);
       return res.send("No Vendors Found");
     });
@@ -148,11 +85,10 @@ const updateVendor = async (req, res) => {
   try {
     const id = req.params.id;
     let updationData = req.body;
-    // console.log("update vendor called");
-    // data = Object.values(data);
+    
     if (updationData) {
-      let previousData = await getDataById(id);
-      updationData = compareValues(updationData, previousData);
+      let previousData = await getDataById(id, 'vendor', 'VendorID');
+      updationData = compareVendorValues(updationData, previousData);
       updationData.push(id);
       sql = `UPDATE vendor
             SET Name = ?,

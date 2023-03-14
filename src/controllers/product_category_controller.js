@@ -18,7 +18,6 @@ const createProductCategory = async (req, res) => {
   const creation_date = `${day}-${month}-${year}`;
   
   try {
-    // sql = 'INSERT INTO product_category(name) VALUES(? ?)';
     sql = "INSERT INTO product_category (name, creation_date) VALUES(?, ?)";
     values = [category, creation_date];
     db.run(sql, values, (err) => {
