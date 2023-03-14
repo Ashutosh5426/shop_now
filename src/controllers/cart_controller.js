@@ -3,7 +3,6 @@ const { db } = require("../database/database_operations");
 
 let sql = `CREATE TABLE IF NOT EXISTS cart (
     CartID INTEGER PRIMARY KEY AUTOINCREMENT,
-    ProductID INTEGER NOT NULL,
     Quantity INTEGER NOT NULL,
     Variation TEXT,
     Discount REAL,
@@ -16,6 +15,55 @@ let sql = `CREATE TABLE IF NOT EXISTS cart (
 );`;
 
 db.run(sql);
+
+
+const getDataById = async (id) => {
+  let result = await new Promise((resolve, reject) => {
+    sql = "SELECT * FROM cart WHERE CartID = ?";
+    db.all(sql, [id], (err, rows) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+  return result;
+};
+
+function compareValues(updationData, previousData) {
+  previousData = previousData[0];
+
+  if (updationData.Quantity == undefined)
+    updationData.Quantity = previousData.Quantity;
+  if (updationData.Variation == undefined)
+    updationData.Variation = previousData.Variation;
+  if (updationData.Discount == undefined)
+    updationData.Discount = previousData.Discount;
+  if (updationData.GrandTotal == undefined)
+    updationData.GrandTotal = previousData.GrandTotal;
+  if (updationData.SubTotal == undefined)
+    updationData.SubTotal = previousData.SubTotal;
+  if (updationData.TaxTotal == undefined)
+    updationData.TaxTotal = previousData.TaxTotal;
+  if (updationData.CreationDate == undefined)
+    updationData.CreationDate = previousData.CreationDate;
+  if (updationData.CartType == undefined)
+    updationData.CartType = previousData.CartType;
+
+  updationData = [
+    updationData.Quantity,
+    updationData.Variation,
+    updationData.Discount,
+    updationData.GrandTotal,
+    updationData.SubTotal,
+    updationData.TaxTotal,
+    updationData.CreationDate,
+    updationData.CartType,
+  ];
+  // console.log(updationData)
+  return updationData;
+}
 
 // GET /cart: Get all cart items
 const getCarts = async (req, res) => {
@@ -88,14 +136,26 @@ const createCart = async (req, res) => {
 const updateCart = async (req, res) => {
   try {
     const id = req.params.id;
-    let data = req.body;
-    data = Object.values(data);
-    if (data) {
-      data.push(id);
+    let updationData = req.body;
+    // data = Object.values(data);
+    if (updationData) {
+      let previousData = await getDataById(id);
+      updationData = compareValues(updationData, previousData);
+      updationData.push(id);
+
       sql = `UPDATE cart
-            SET ProductId, Quantity, Variation, Discount, GrandTotal, SubTotal, TaxTotal, CreationDate, CartType
-            WHERE CartID = ?;`;
-      db.run(sql, data, (err) => {
+            SET
+            Quantity = ?,
+            Variation = ?,
+            Discount = ?,
+            GrandTotal = ?,
+            SubTotal = ?,
+            TaxTotal = ?,
+            CreationDate = ?,
+            CartType = ?
+            WHERE CartID = ?;
+            `;
+      db.run(sql, updationData, (err) => {
         if (err) return console.error(err.message);
         res.send("Data updated successfully");
       });

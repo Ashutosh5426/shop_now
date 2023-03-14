@@ -81,7 +81,7 @@ router.get('/carts', cart.getCarts);
 router.get('/carts/:id', cart.getACart);
 
 // PUT /cart/:id: Update a cart item by ID
-router.put('/carts:id', cart.updateCart);
+router.put('/carts/:id', cart.updateCart);
 
 // DELETE /cart/:id: Delete a cart item by ID
 router.delete('/carts/:id', cart.deleteCart);
