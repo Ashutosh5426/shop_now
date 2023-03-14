@@ -46,7 +46,9 @@ const getVendors = async (req, res) => {
             rows.forEach(row => {
                 console.log(row);
             })
-            return res.send(rows);
+            // return res.send(rows);
+            if(rows.length > 0) return res.send(rows);
+            return res.send('No Vendors Found')
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -63,7 +65,8 @@ const getVendorById = async (req, res) => {
             rows.forEach(row => {
                 console.log(row);
             })
-            return res.send(rows);
+            if(rows.length > 0) return res.send(rows);
+            return res.send('No Vendors Found with the given vendor id');
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -77,6 +80,7 @@ const updateVendor = async (req, res) => {
     try {
         const id = req.params.id;
         let data = req.body;
+        console.log('update vendor called');
         data = Object.values(data);
         if (data) {
             data.push(id);

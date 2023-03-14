@@ -18,12 +18,12 @@ let sql = `CREATE TABLE IF NOT EXISTS product (
 db.run(sql);
 
 
+
+
 // POST /products: Add a new product
 const createProduct = async (req, res) => {
-    let data = req.body;
     const { Name, Price, VendorID, CategoryID, CreationDate, UpdationDate, Variations, Attributes } = req.body;
     try {
-
         sql = 'INSERT INTO product (Name, Price, VendorID, CategoryID, CreationDate, UpdationDate, Variations, Attributes) VALUES(?, ?, ?, ?, ?, ?, ?, ?)';
         values = [Name, Price, VendorID, CategoryID, CreationDate, UpdationDate, Variations, Attributes];
         db.run(sql, values, (err) => {
@@ -46,7 +46,8 @@ const getProducts = async (req, res) => {
             rows.forEach(row => {
                 console.log(row);
             })
-            return res.send(rows);
+            if(rows.length > 0) return res.send(rows);
+            return res.send("No Data Found");
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -63,14 +64,13 @@ const getProductById = async (req, res) => {
             rows.forEach(row => {
                 console.log(row);
             })
-            return res.send(rows);
+            if(rows.length > 0) return res.send(rows);
+            return res.send("No data found with the given product id.");
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
-
-
 
 // PUT /products/:id: Update a product by ID
 const updateProduct = async (req, res) => {
@@ -102,6 +102,7 @@ const updateProduct = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
 
 // DELETE /products/:id: Delete a products by ID
 const deleteProduct = async (req, res) => {
